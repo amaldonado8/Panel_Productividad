@@ -1,9 +1,10 @@
+# =========================================================
+# 1. Cargar archivos
+# =========================================================
 @st.cache_data
 def load_all():
 
-    # =====================================================
-    # 1. Cargar TODOS los archivos de gestiones
-    # =====================================================
+    # CARGAR LOS 5 ARCHIVOS DE GESTIONES
     gestion_files = [
         "Data/Gestion_part1.csv",
         "Data/Gestion_part2.csv",
@@ -12,25 +13,20 @@ def load_all():
         "Data/Gestion_part5.csv"
     ]
 
-    df_list = []
+    df_list = [load_csv(f) for f in gestion_files]
 
-    for f in gestion_files:
-        tmp = load_csv(f)
-        df_list.append(tmp)
-
+    # UNIR TODO EN UN SOLO DATAFRAME
     df = pd.concat(df_list, ignore_index=True)
 
-    # =====================================================
-    # 2. Cargar tablas complementarias
-    # =====================================================
+    # Cargar otras tablas
     tipo_contacto = load_csv("Data/TipoContacto.csv")
     producto = load_csv("Data/Producto.csv")
     orden_etapa = load_csv("Data/Orden etapa.csv")
     semana = load_csv("Data/Semana.csv")
 
-    # =====================================================
-    # 3. LIMPIEZA PROFUNDA DE COLUMNAS (BOM, espacios)
-    # =====================================================
+    # ------------------------------
+    # Renombrar columnas con BOM
+    # ------------------------------
     rename_map = {
         "ï»¿NumeroOperacion": "NumeroOperacion",
         "ï»¿CodigoTipoContacto": "CodigoTipoContacto",
@@ -45,27 +41,8 @@ def load_all():
     orden_etapa.rename(columns=rename_map, inplace=True)
     semana.rename(columns=rename_map, inplace=True)
 
-    # LIMPIAR TODAS LAS COLUMNAS DEL ARCHIVO PRODUCTO
-    producto.columns = (
-        producto.columns
-        .str.replace("ï»¿", "", regex=False)
-        .str.replace("\ufeff", "", regex=False)
-        .str.strip()
-    )
-
-    # LIMPIAR VALORES DE PRODUCTO EN AMBOS DATASETS
-    producto["ProductoGestion"] = producto["ProductoGestion"].str.strip()
-    df["ProductoGestion"] = df["ProductoGestion"].str.strip()
-
-    # LIMPIAR "Etapa" Y "CodigoTipoContacto" TAMBIÉN
-    df["Etapa"] = df["Etapa"].str.strip()
-    df["CodigoTipoContacto"] = df["CodigoTipoContacto"].str.strip()
-
-    tipo_contacto["CodigoTipoContacto"] = tipo_contacto["CodigoTipoContacto"].str.strip()
-    orden_etapa["Etapa"] = orden_etapa["Etapa"].str.strip()
-
     # =====================================================
-    # 4. Uniones (exactamente como en Power BI)
+    # 2. Uniones como en Power BI
     # =====================================================
 
     # Tipo de Contacto
@@ -75,14 +52,14 @@ def load_all():
         how="left"
     )
 
-    # Producto Categoria Final (ALIA, CCO, MICROCREDITO, ETC)
+    # Producto
     df = df.merge(
         producto[["ProductoGestion", "Producto"]],
         on="ProductoGestion",
         how="left"
     )
 
-    # Orden de Etapa
+    # Orden Etapa
     df = df.merge(
         orden_etapa,
         on="Etapa",
@@ -99,13 +76,13 @@ def load_all():
     )
 
     # =====================================================
-    # 5. Crear columnas métricas del panel
+    # 3. Crear métricas del panel
     # =====================================================
     df["Gestiones"] = 1
+    df["CD"] = df["EsContactoDirecto"]
     df["Contacto"] = df["EsContacto"]
     df["ContactoDirecto"] = df["EsContactoDirecto"]
     df["Compromisos"] = df["EsCompromiso"]
-    df["CD"] = df["EsContactoDirecto"]
 
     return df
 
