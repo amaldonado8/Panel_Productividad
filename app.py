@@ -298,7 +298,7 @@ with tab1:
 # Placeholders de las otras pestañas
 # =========================================================
 with tab2:
-    st.info("Pestaña Detalle — pendiente de construir.")
+    st.info("Pestaña Detalle")
 
 with tab3:
-    st.info("Pestaña Comparativo — pendiente de construir.")
+    st.info("Pestaña Comparativo")
