@@ -51,7 +51,22 @@ def load_all():
 
     # Cargar otras tablas
     tipo_contacto = load_csv("Data/TipoContacto.csv")
+
+
     producto = load_csv("Data/Producto.csv")
+
+    # Limpieza profunda de columnas y valores
+    producto.columns = (
+        producto.columns
+        .str.replace("ï»¿", "", regex=False)
+        .str.replace("\ufeff", "", regex=False)
+        .str.strip()
+    )
+    
+    producto["ProductoGestion"] = producto["ProductoGestion"].str.strip()
+
+
+    
     orden_etapa = load_csv("Data/Orden etapa.csv")
     semana = load_csv("Data/Semana.csv")
 
@@ -114,6 +129,8 @@ def load_all():
     df["Contacto"] = df["EsContacto"]
     df["ContactoDirecto"] = df["EsContactoDirecto"]
     df["Compromisos"] = df["EsCompromiso"]
+    df["ProductoGestion"] = df["ProductoGestion"].str.strip()
+
 
     return df
 
