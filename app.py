@@ -1,41 +1,9 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import csv
-
-st.set_page_config(page_title="Panel Productividad BS", layout="wide")
-
-# =========================================================
-# Función robusta para cargar y limpiar CSVs
-# =========================================================
-def load_csv(path):
-    try:
-        with open(path, "r", encoding="latin-1") as f:
-            dialect = csv.Sniffer().sniff(f.read(1024))
-            sep = dialect.delimiter
-    except:
-        sep = ";"
-
-    df = pd.read_csv(path, sep=sep, encoding="latin-1")
-
-    # limpiar BOM, espacios, caracteres invisibles
-    df.columns = (
-        df.columns
-        .str.replace("ï»¿", "", regex=False)
-        .str.replace("\ufeff", "", regex=False)
-        .str.strip()
-    )
-
-    return df
-
-
-# =========================================================
-# 1. Cargar archivos
-# =========================================================
 @st.cache_data
 def load_all():
 
-    # CARGAR LOS 5 ARCHIVOS DE GESTIONES
+    # =====================================================
+    # 1. Cargar TODOS los archivos de gestiones
+    # =====================================================
     gestion_files = [
         "Data/Gestion_part1.csv",
         "Data/Gestion_part2.csv",
@@ -44,35 +12,25 @@ def load_all():
         "Data/Gestion_part5.csv"
     ]
 
-    df_list = [load_csv(f) for f in gestion_files]
+    df_list = []
 
-    # UNIR TODO EN UN SOLO DATAFRAME
+    for f in gestion_files:
+        tmp = load_csv(f)
+        df_list.append(tmp)
+
     df = pd.concat(df_list, ignore_index=True)
 
-    # Cargar otras tablas
+    # =====================================================
+    # 2. Cargar tablas complementarias
+    # =====================================================
     tipo_contacto = load_csv("Data/TipoContacto.csv")
-
-
     producto = load_csv("Data/Producto.csv")
-
-    # Limpieza profunda de columnas y valores
-    producto.columns = (
-        producto.columns
-        .str.replace("ï»¿", "", regex=False)
-        .str.replace("\ufeff", "", regex=False)
-        .str.strip()
-    )
-    
-    producto["ProductoGestion"] = producto["ProductoGestion"].str.strip()
-
-
-    
     orden_etapa = load_csv("Data/Orden etapa.csv")
     semana = load_csv("Data/Semana.csv")
 
-    # ------------------------------
-    # Renombrar columnas con BOM
-    # ------------------------------
+    # =====================================================
+    # 3. LIMPIEZA PROFUNDA DE COLUMNAS (BOM, espacios)
+    # =====================================================
     rename_map = {
         "ï»¿NumeroOperacion": "NumeroOperacion",
         "ï»¿CodigoTipoContacto": "CodigoTipoContacto",
@@ -87,8 +45,27 @@ def load_all():
     orden_etapa.rename(columns=rename_map, inplace=True)
     semana.rename(columns=rename_map, inplace=True)
 
+    # LIMPIAR TODAS LAS COLUMNAS DEL ARCHIVO PRODUCTO
+    producto.columns = (
+        producto.columns
+        .str.replace("ï»¿", "", regex=False)
+        .str.replace("\ufeff", "", regex=False)
+        .str.strip()
+    )
+
+    # LIMPIAR VALORES DE PRODUCTO EN AMBOS DATASETS
+    producto["ProductoGestion"] = producto["ProductoGestion"].str.strip()
+    df["ProductoGestion"] = df["ProductoGestion"].str.strip()
+
+    # LIMPIAR "Etapa" Y "CodigoTipoContacto" TAMBIÉN
+    df["Etapa"] = df["Etapa"].str.strip()
+    df["CodigoTipoContacto"] = df["CodigoTipoContacto"].str.strip()
+
+    tipo_contacto["CodigoTipoContacto"] = tipo_contacto["CodigoTipoContacto"].str.strip()
+    orden_etapa["Etapa"] = orden_etapa["Etapa"].str.strip()
+
     # =====================================================
-    # 2. Uniones como en Power BI
+    # 4. Uniones (exactamente como en Power BI)
     # =====================================================
 
     # Tipo de Contacto
@@ -98,14 +75,14 @@ def load_all():
         how="left"
     )
 
-    # Producto
+    # Producto Categoria Final (ALIA, CCO, MICROCREDITO, ETC)
     df = df.merge(
         producto[["ProductoGestion", "Producto"]],
         on="ProductoGestion",
         how="left"
     )
 
-    # Orden Etapa
+    # Orden de Etapa
     df = df.merge(
         orden_etapa,
         on="Etapa",
@@ -122,214 +99,13 @@ def load_all():
     )
 
     # =====================================================
-    # 3. Crear métricas del panel
+    # 5. Crear columnas métricas del panel
     # =====================================================
     df["Gestiones"] = 1
-    df["CD"] = df["EsContactoDirecto"]
     df["Contacto"] = df["EsContacto"]
     df["ContactoDirecto"] = df["EsContactoDirecto"]
     df["Compromisos"] = df["EsCompromiso"]
-    df["ProductoGestion"] = df["ProductoGestion"].str.strip()
-
+    df["CD"] = df["EsContactoDirecto"]
 
     return df
 
-
-df = load_all()
-
-
-# =========================================================
-# 4. INTERFAZ PRINCIPAL
-# =========================================================
-tab1, tab2, tab3 = st.tabs([" Gestiones", " Detalle", " Comparativo"])
-
-
-# =========================================================
-# 5. PESTAÑA — GESTIONES
-# =========================================================
-with tab1:
-
-    st.title(" Panel de Gestiones — Productividad BS")
-
-    # -------------------- FILTROS --------------------
-    st.markdown("###  Filtros")
-
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
-
-    with c1:
-        fecha_sel = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
-
-    with c2:
-        supervisor_sel = st.selectbox("Supervisor", ["Todas"] + sorted(df["Supervisor"].dropna().unique()))
-
-    with c3:
-        gestor_sel = st.selectbox("Gestor", ["Todas"] + sorted(df["Gestor"].dropna().unique()))
-
-    with c4:
-        etapa_sel = st.selectbox("Etapa", ["Todas"] + sorted(df["Etapa"].dropna().unique()))
-
-    with c5:
-        estrategia_sel = st.selectbox("Estrategia", ["Todas"] + sorted(df["Estrategia"].dropna().unique()))
-
-    with c6:
-        producto_sel = st.selectbox("Producto", ["Todos"] + sorted(df["Producto"].dropna().unique()))
-
-    df_f = df.copy()
-
-    if fecha_sel != "Todas":
-        df_f = df_f[df_f["FechaGestion"] == fecha_sel]
-
-    if supervisor_sel != "Todas":
-        df_f = df_f[df_f["Supervisor"] == supervisor_sel]
-
-    if gestor_sel != "Todas":
-        df_f = df_f[df_f["Gestor"] == gestor_sel]
-
-    if etapa_sel != "Todas":
-        df_f = df_f[df_f["Etapa"] == etapa_sel]
-
-    if estrategia_sel != "Todas":
-        df_f = df_f[df_f["Estrategia"] == estrategia_sel]
-
-    if producto_sel != "Todos":
-        df_f = df_f[df_f["Producto"] == producto_sel]
-
-
-    # -------------------- KPIs --------------------
-    st.markdown("---")
-    st.markdown("###  Métricas")
-
-    k1, k2, k3, k4, k5 = st.columns(5)
-
-    with k1:
-        st.metric("Gestiones", df_f["Gestiones"].sum())
-
-    with k2:
-        st.metric("Operaciones Únicas", df_f["NumeroOperacion"].nunique())
-
-    with k3:
-        st.metric("Contacto", df_f["Contacto"].sum())
-
-    with k4:
-        st.metric("Directo", df_f["ContactoDirecto"].sum())
-
-    with k5:
-        st.metric("Compromisos", df_f["Compromisos"].sum())
-
-
-    # -------------------- LAYOUT PRINCIPAL --------------------
-    st.markdown("---")
-    colA, colB, colC = st.columns([1.2, 1.3, 1])
-
-    # ----------- 1) Tabla primera gestión -----------
-    with colA:
-        st.markdown("####  Hora de la primera gestión")
-
-        df_hora = (
-            df_f.groupby("Gestor")["HoraGestion"]
-            .min()
-            .reset_index()
-            .sort_values("HoraGestion")
-        )
-
-        st.dataframe(df_hora, use_container_width=True, height=360)
-
-
-    # ----------- 2) Slider + funnel -----------
-    with colB:
-        st.markdown("####  Rango de hora")
-
-        h_min = int(df_f["Hora"].min())
-        h_max = int(df_f["Hora"].max())
-
-        h1, h2 = st.columns(2)
-
-        with h1:
-            desde = st.slider("Desde", h_min, h_max, h_min)
-
-        with h2:
-            hasta = st.slider("Hasta", h_min, h_max, h_max)
-
-        df_rango = df_f[(df_f["Hora"] >= desde) & (df_f["Hora"] <= hasta)]
-
-        st.markdown(f"**Gestiones en rango:** {df_rango['Gestiones'].sum():,.0f}")
-
-        funnel = pd.DataFrame({
-            "Etapa": ["Operaciones", "Contacto", "Directo", "Compromisos"],
-            "Valor": [
-                df_rango["NumeroOperacion"].nunique(),
-                df_rango["Contacto"].sum(),
-                df_rango["ContactoDirecto"].sum(),
-                df_rango["Compromisos"].sum(),
-            ]
-        })
-
-        fig = px.bar(
-            funnel,
-            x="Valor",
-            y="Etapa",
-            orientation="h",
-            text="Valor"
-        )
-        st.plotly_chart(fig, use_container_width=True, height=360)
-
-
-    # ----------- 3) Donut Tipo Contacto -----------
-    with colC:
-        st.markdown("####  Tipo de contacto")
-
-        tc = df_f["TipoContacto"].value_counts().reset_index()
-        tc.columns = ["Tipo", "Cantidad"]
-
-        fig_pie = px.pie(tc, values="Cantidad", names="Tipo", hole=0.55)
-        st.plotly_chart(fig_pie, use_container_width=True, height=360)
-
-
-    # -------------------- TABLAS INFERIORES --------------------
-    st.markdown("---")
-    b1, b2 = st.columns([1.2, 1.8])
-
-    # ----------- Tabla resumen gestor -----------
-    with b1:
-        st.markdown("####  Resumen por Gestor")
-
-        tabla = (
-            df_f.groupby("Gestor")
-            .agg({
-                "Gestiones": "sum",
-                "CD": "sum",
-                "Compromisos": "sum",
-                "ContactoDirecto": "sum",
-            })
-            .reset_index()
-        )
-
-        tabla["% Directo"] = (tabla["ContactoDirecto"] / tabla["Gestiones"] * 100).round(1)
-
-        st.dataframe(tabla, use_container_width=True, height=320)
-
-
-    # ----------- Tabla por hora -----------
-    with b2:
-        st.markdown("####  Gestiones por Hora")
-
-        tabla_horas = pd.pivot_table(
-            df_f,
-            index="Gestor",
-            columns="Hora",
-            values="Gestiones",
-            aggfunc="sum",
-            fill_value=0
-        )
-
-        st.dataframe(tabla_horas, use_container_width=True, height=320)
-
-
-# =========================================================
-# Placeholders de las otras pestañas
-# =========================================================
-with tab2:
-    st.info("Pestaña Detalle")
-
-with tab3:
-    st.info("Pestaña Comparativo")
