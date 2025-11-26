@@ -1,169 +1,333 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import os
 
 st.set_page_config(page_title="Panel Productividad BS", layout="wide")
 
-# ---------------------------------------------------
-#  CARGA ROBUSTA DEL ARCHIVO
-# ---------------------------------------------------
+# =========================================================
+# 1. CARGA DE DATOS
+# =========================================================
 @st.cache_data
 def load_data():
-    folder = "Data"
-    file_name = None
-
-    # Busca cualquier archivo cuyo nombre comience con "Gestion"
-    for f in os.listdir(folder):
-        if f.lower().startswith("Gestion_part2") and f.lower().endswith(".csv"):
-            file_name = os.path.join(folder, f)
-            break
-
-    if not file_name:
-        st.error("❌ No se encontró ningún archivo que empiece con 'Gestion' dentro de /Data.")
+    """
+    Carga el archivo principal de gestiones.
+    Asegúrate de que el archivo exista en: Data/Gestion_part1.csv
+    """
+    path = "Data/Gestion_part1.csv"
+    try:
+        df = pd.read_csv(path, encoding="latin-1")
+    except FileNotFoundError:
+        st.error(f"❌ No se encontró el archivo {path}. Verifica el nombre y la ruta.")
         st.stop()
-
-    df = pd.read_csv(file_name, encoding="latin-1")
     return df
 
-df = load_data()
 
-# ---------------------------------------------------
-#  FILTROS SUPERIORES
-# ---------------------------------------------------
-st.markdown("## 🔎 Filtros")
+df_raw = load_data()
 
-col1, col2, col3, col4, col5, col6 = st.columns(6)
+# =========================================================
+# 2. VALIDAR COLUMNAS NECESARIAS
+#    (ajusta aquí si tus nombres son diferentes)
+# =========================================================
+required_cols = [
+    "FechaGestion",      # fecha de gestión
+    "Supervisor",
+    "Gestor",
+    "Etapa",
+    "Estrategia",
+    "Tipo",              # tipo de cartera / gestión
+    "Producto",          # ALIA, ALIA MI SOCIA, etc.
+    "Hora",              # hora (entera 0-23)
+    "HoraGestion",       # hora de la primera gestión
+    "Gestiones",
+    "NumeroOperaciones",
+    "Contacto",
+    "ContactoDirecto",
+    "Compromisos",
+    "CD",
+    "TipoContacto"
+]
 
-with col1:
-    fecha = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique().tolist()))
+missing = [c for c in required_cols if c not in df_raw.columns]
 
-with col2:
-    supervisor = st.selectbox("Supervisor", ["Todas"] + sorted(df["Supervisor"].dropna().unique().tolist()))
+if missing:
+    st.error(
+        "❌ Faltan columnas en tu archivo CSV para reproducir la primera ventana.\n\n"
+        "Columnas faltantes:\n"
+        + "\n".join(f"- {c}" for c in missing)
+        + "\n\nRevisa los nombres en Gestion_part1.csv o ajústalos en el código."
+    )
+    st.stop()
 
-with col3:
-    gestor = st.selectbox("Gestor", ["Todas"] + sorted(df["Gestor"].dropna().unique().tolist()))
+df = df_raw.copy()
 
-with col4:
-    etapa = st.selectbox("Etapa", ["Todas"] + sorted(df["Etapa"].dropna().unique().tolist()))
+# =========================================================
+# 3. ESTRUCTURA DE LA APP CON PESTAÑAS
+# =========================================================
+tab1, tab2, tab3 = st.tabs(["📊 Gestiones", "📄 Detalle", "📈 Comparativo"])
 
-with col5:
-    estrategia = st.selectbox("Estrategia", ["Todas"] + sorted(df["Estrategia"].dropna().unique().tolist()))
+# =========================================================
+# 4. PESTAÑA 1: GESTIONES
+# =========================================================
+with tab1:
+    st.title("Panel Productividad BS – Gestiones")
 
-with col6:
-    tipo = st.selectbox("Tipo", ["Todas"] + sorted(df["Tipo"].dropna().unique().tolist()))
+    # ------------------ 4.1 Filtros superiores ------------------
+    st.markdown("### 🔎 Filtros")
 
-# Aplicar filtros
-df_filtered = df.copy()
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
 
-if fecha != "Todas":
-    df_filtered = df_filtered[df_filtered["FechaGestion"] == fecha]
-if supervisor != "Todas":
-    df_filtered = df_filtered[df_filtered["Supervisor"] == supervisor]
-if gestor != "Todas":
-    df_filtered = df_filtered[df_filtered["Gestor"] == gestor]
-if etapa != "Todas":
-    df_filtered = df_filtered[df_filtered["Etapa"] == etapa]
-if estrategia != "Todas":
-    df_filtered = df_filtered[df_filtered["Estrategia"] == estrategia]
-if tipo != "Todas":
-    df_filtered = df_filtered[df_filtered["Tipo"] == tipo]
+    with c1:
+        fecha_sel = st.selectbox(
+            "Fecha Gestión",
+            ["Todas"] + sorted(df["FechaGestion"].dropna().unique().tolist())
+        )
 
-# ---------------------------------------------------
-#  TARJETAS DE MÉTRICAS
-# ---------------------------------------------------
-st.markdown("---")
-st.markdown("### 📌 Indicadores Generales")
+    with c2:
+        supervisor_sel = st.selectbox(
+            "Supervisor",
+            ["Todas"] + sorted(df["Supervisor"].dropna().unique().tolist())
+        )
 
-colA, colB, colC, colD, colE = st.columns(5)
+    with c3:
+        gestor_sel = st.selectbox(
+            "Gestor",
+            ["Todas"] + sorted(df["Gestor"].dropna().unique().tolist())
+        )
 
-with colA:
-    st.metric("Gestiones", f"{df_filtered['Gestiones'].sum():,.0f}")
+    with c4:
+        etapa_sel = st.selectbox(
+            "Etapa",
+            ["Todas"] + sorted(df["Etapa"].dropna().unique().tolist())
+        )
 
-with colB:
-    st.metric("Número Operaciones", f"{df_filtered['NumeroOperaciones'].sum():,.0f}")
+    with c5:
+        estrategia_sel = st.selectbox(
+            "Estrategia",
+            ["Todas"] + sorted(df["Estrategia"].dropna().unique().tolist())
+        )
 
-with colC:
-    st.metric("Contacto", f"{df_filtered['Contacto'].sum():,.0f}")
+    with c6:
+        tipo_sel = st.selectbox(
+            "Tipo",
+            ["Todas"] + sorted(df["Tipo"].dropna().unique().tolist())
+        )
 
-with colD:
-    st.metric("Contacto Directo", f"{df_filtered['ContactoDirecto'].sum():,.0f}")
+    # “Botones” de producto (ALIA, ALIA MI SOCIA, etc.)
+    st.markdown("### 🎯 Producto / Campaña")
+    productos_unicos = ["Todos"] + sorted(df["Producto"].dropna().unique().tolist())
+    producto_sel = st.segmented_control("Producto", productos_unicos, key="producto_seg")
 
-with colE:
-    st.metric("Compromisos", f"{df_filtered['Compromisos'].sum():,.0f}")
+    # Aplicar filtros
+    df_f = df.copy()
 
-# ---------------------------------------------------
-#  DONUT CHART: TIPO CONTACTO
-# ---------------------------------------------------
-st.markdown("### 🎯 Tipo de Contacto")
+    if fecha_sel != "Todas":
+        df_f = df_f[df_f["FechaGestion"] == fecha_sel]
 
-contacto_counts = df_filtered["TipoContacto"].value_counts().reset_index()
-contacto_counts.columns = ["TipoContacto", "Cantidad"]
+    if supervisor_sel != "Todas":
+        df_f = df_f[df_f["Supervisor"] == supervisor_sel]
 
-fig_pie = px.pie(
-    contacto_counts,
-    values="Cantidad",
-    names="TipoContacto",
-    hole=0.55,
-    color_discrete_sequence=px.colors.sequential.Blues
-)
+    if gestor_sel != "Todas":
+        df_f = df_f[df_f["Gestor"] == gestor_sel]
 
-col_pie, col_v = st.columns([2, 1])
+    if etapa_sel != "Todas":
+        df_f = df_f[df_f["Etapa"] == etapa_sel]
 
-with col_pie:
-    st.plotly_chart(fig_pie, use_container_width=True)
+    if estrategia_sel != "Todas":
+        df_f = df_f[df_f["Estrategia"] == estrategia_sel]
 
-# ---------------------------------------------------
-#  HORA DE LA PRIMERA GESTIÓN
-# ---------------------------------------------------
-st.markdown("### 🕒 Hora de la primera gestión")
+    if tipo_sel != "Todas":
+        df_f = df_f[df_f["Tipo"] == tipo_sel]
 
-df_hora = df_filtered.groupby("Gestor")["HoraGestion"].min().reset_index()
-df_hora = df_hora.sort_values("HoraGestion")
+    if producto_sel != "Todos":
+        df_f = df_f[df_f["Producto"] == producto_sel]
 
-st.dataframe(df_hora, use_container_width=True)
+    if df_f.empty:
+        st.warning("No hay datos para los filtros seleccionados.")
+        st.stop()
 
-# ---------------------------------------------------
-#  GESTIONES POR HORA (SLIDER)
-# ---------------------------------------------------
-st.markdown("### ⏳ Gestiones por Hora")
+    # ------------------ 4.2 Métricas principales ------------------
+    st.markdown("---")
+    st.markdown("### 📌 Indicadores generales")
 
-hora_min = int(df_filtered["Hora"].min())
-hora_max = int(df_filtered["Hora"].max())
+    m1, m2, m3, m4, m5 = st.columns(5)
 
-c1, c2 = st.columns([1, 1])
+    with m1:
+        st.metric("Gestiones", f"{df_f['Gestiones'].sum():,.0f}")
 
-with c1:
-    hora_inicio = st.slider("Hora desde:", min_value=hora_min, max_value=hora_max, value=hora_min)
+    with m2:
+        st.metric("Número de Operaciones", f"{df_f['NumeroOperaciones'].sum():,.0f}")
 
-with c2:
-    hora_fin = st.slider("Hora hasta:", min_value=hora_min, max_value=hora_max, value=hora_max)
+    with m3:
+        st.metric("Contacto", f"{df_f['Contacto'].sum():,.0f}")
 
-df_horas = df_filtered[(df_filtered["Hora"] >= hora_inicio) & (df_filtered["Hora"] <= hora_fin)]
+    with m4:
+        st.metric("Contacto Directo", f"{df_f['ContactoDirecto'].sum():,.0f}")
 
-tabla_horas = df_horas.pivot_table(
-    index="Gestor",
-    columns="Hora",
-    values="Gestiones",
-    aggfunc="sum",
-    fill_value=0
-)
+    with m5:
+        st.metric("Compromisos", f"{df_f['Compromisos'].sum():,.0f}")
 
-st.dataframe(tabla_horas, use_container_width=True)
+    # ------------------ 4.3 Layout principal ------------------
+    st.markdown("---")
+    top_left, top_mid, top_right = st.columns([1.2, 1.2, 1])
 
-# ---------------------------------------------------
-#  TABLA GENERAL POR GESTOR
-# ---------------------------------------------------
-st.markdown("### 📋 Resumen por Gestor")
+    # ---- 4.3.1 Tabla: Hora de la primera gestión ----
+    with top_left:
+        st.markdown("#### 🕒 Hora de la primera gestión")
 
-tabla_gen = df_filtered.groupby("Gestor").agg({
-    "Gestiones": "sum",
-    "CD": "sum",
-    "Compromisos": "sum",
-    "ContactoDirecto": "sum"
-}).reset_index()
+        df_hora = (
+            df_f.groupby("Gestor")["HoraGestion"]
+            .min()
+            .reset_index()
+            .sort_values("HoraGestion")
+        )
 
-tabla_gen["% Contacto Directo"] = tabla_gen["ContactoDirecto"] / tabla_gen["Gestiones"] * 100
+        st.dataframe(df_hora, use_container_width=True, height=360)
 
-st.dataframe(tabla_gen, use_container_width=True)
+    # ---- 4.3.2 Slider de hora + barras de embudo ----
+    with top_mid:
+        st.markdown("#### ⏳ Rango de hora")
+
+        hora_min = int(df_f["Hora"].min())
+        hora_max = int(df_f["Hora"].max())
+
+        h1, h2 = st.columns(2)
+        with h1:
+            hora_desde = st.slider(
+                "Desde",
+                min_value=hora_min,
+                max_value=hora_max,
+                value=hora_min,
+                key="hora_desde",
+            )
+        with h2:
+            hora_hasta = st.slider(
+                "Hasta",
+                min_value=hora_min,
+                max_value=hora_max,
+                value=hora_max,
+                key="hora_hasta",
+            )
+
+        df_rango = df_f[(df_f["Hora"] >= hora_desde) & (df_f["Hora"] <= hora_hasta)]
+
+        st.markdown("#### Gestiones en rango seleccionado")
+        st.markdown(
+            f"**Total gestiones:** {df_rango['Gestiones'].sum():,.0f}",
+        )
+
+        # Gráfico tipo “embudo” horizontal (Operaciones → Contacto → Directo → Compromisos)
+        funnel_data = pd.DataFrame(
+            {
+                "Etapa": [
+                    "Número Operaciones",
+                    "Contacto",
+                    "Contacto Directo",
+                    "Compromisos",
+                ],
+                "Valor": [
+                    df_rango["NumeroOperaciones"].sum(),
+                    df_rango["Contacto"].sum(),
+                    df_rango["ContactoDirecto"].sum(),
+                    df_rango["Compromisos"].sum(),
+                ],
+            }
+        )
+
+        fig_funnel = px.bar(
+            funnel_data,
+            x="Valor",
+            y="Etapa",
+            orientation="h",
+            text="Valor",
+        )
+        fig_funnel.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
+        fig_funnel.update_layout(
+            yaxis_title="",
+            xaxis_title="",
+            height=260,
+            margin=dict(l=10, r=10, t=10, b=10),
+        )
+
+        st.plotly_chart(fig_funnel, use_container_width=True)
+
+    # ---- 4.3.3 Donut Tipo de Contacto ----
+    with top_right:
+        st.markdown("#### 📞 Tipo de contacto")
+
+        contacto_counts = (
+            df_f["TipoContacto"].value_counts().reset_index()
+        )
+        contacto_counts.columns = ["TipoContacto", "Cantidad"]
+
+        if not contacto_counts.empty:
+            fig_pie = px.pie(
+                contacto_counts,
+                values="Cantidad",
+                names="TipoContacto",
+                hole=0.6,
+            )
+            fig_pie.update_layout(
+                legend_title_text="Tipo",
+                margin=dict(l=10, r=10, t=10, b=10),
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+        else:
+            st.info("No hay datos para TipoContacto con los filtros actuales.")
+
+    # ------------------ 4.4 Parte inferior ------------------
+    st.markdown("---")
+    bottom_left, bottom_right = st.columns([1.2, 1.8])
+
+    # ---- 4.4.1 Tabla resumen por gestor ----
+    with bottom_left:
+        st.markdown("#### 📋 Resumen por gestor")
+
+        tabla_gen = (
+            df_f.groupby("Gestor")
+            .agg(
+                Gestiones=("Gestiones", "sum"),
+                CD=("CD", "sum"),
+                Compromisos=("Compromisos", "sum"),
+                ContactoDirecto=("ContactoDirecto", "sum"),
+            )
+            .reset_index()
+        )
+
+        tabla_gen["% Contacto Directo"] = (
+            tabla_gen["ContactoDirecto"] / tabla_gen["Gestiones"] * 100
+        )
+
+        # Formatear porcentaje a 1 decimal
+        tabla_gen["% Contacto Directo"] = tabla_gen["% Contacto Directo"].round(1)
+
+        st.dataframe(tabla_gen, use_container_width=True, height=320)
+
+    # ---- 4.4.2 Tabla dinámica: gestiones por hora ----
+    with bottom_right:
+        st.markdown("#### 📊 Gestiones por hora")
+
+        tabla_horas = pd.pivot_table(
+            df_f,
+            index="Gestor",
+            columns="Hora",
+            values="Gestiones",
+            aggfunc="sum",
+            fill_value=0,
+        )
+
+        # ordenar columnas por hora
+        tabla_horas = tabla_horas.reindex(sorted(tabla_horas.columns), axis=1)
+
+        st.dataframe(tabla_horas, use_container_width=True, height=320)
+
+# =========================================================
+# 5. PESTAÑAS 2 Y 3 (PLACEHOLDER)
+# =========================================================
+with tab2:
+    st.title("Detalle")
+    st.info("Aquí construiremos la pestaña Detalle más adelante.")
+
+with tab3:
+    st.title("Comparativo")
+    st.info("Aquí construiremos la pestaña Comparativo más adelante.")
 
