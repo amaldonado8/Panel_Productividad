@@ -35,7 +35,21 @@ def load_csv(path):
 @st.cache_data
 def load_all():
 
-    df = load_csv("Data/Gestion_part1.csv")
+    # CARGAR LOS 5 ARCHIVOS DE GESTIONES
+    gestion_files = [
+        "Data/Gestion_part1.csv",
+        "Data/Gestion_part2.csv",
+        "Data/Gestion_part3.csv",
+        "Data/Gestion_part4.csv",
+        "Data/Gestion_part5.csv"
+    ]
+
+    df_list = [load_csv(f) for f in gestion_files]
+
+    # UNIR TODO EN UN SOLO DATAFRAME
+    df = pd.concat(df_list, ignore_index=True)
+
+    # Cargar otras tablas
     tipo_contacto = load_csv("Data/TipoContacto.csv")
     producto = load_csv("Data/Producto.csv")
     orden_etapa = load_csv("Data/Orden etapa.csv")
@@ -110,7 +124,7 @@ df = load_all()
 # =========================================================
 # 4. INTERFAZ PRINCIPAL
 # =========================================================
-tab1, tab2, tab3 = st.tabs(["📊 Gestiones", "📄 Detalle", "📈 Comparativo"])
+tab1, tab2, tab3 = st.tabs([" Gestiones", " Detalle", " Comparativo"])
 
 
 # =========================================================
@@ -118,10 +132,10 @@ tab1, tab2, tab3 = st.tabs(["📊 Gestiones", "📄 Detalle", "📈 Comparativo"
 # =========================================================
 with tab1:
 
-    st.title("📊 Panel de Gestiones — Productividad BS")
+    st.title(" Panel de Gestiones — Productividad BS")
 
     # -------------------- FILTROS --------------------
-    st.markdown("### 🔎 Filtros")
+    st.markdown("###  Filtros")
 
     c1, c2, c3, c4, c5, c6 = st.columns(6)
 
@@ -166,7 +180,7 @@ with tab1:
 
     # -------------------- KPIs --------------------
     st.markdown("---")
-    st.markdown("### 📌 Métricas")
+    st.markdown("###  Métricas")
 
     k1, k2, k3, k4, k5 = st.columns(5)
 
@@ -192,7 +206,7 @@ with tab1:
 
     # ----------- 1) Tabla primera gestión -----------
     with colA:
-        st.markdown("#### 🕒 Hora de la primera gestión")
+        st.markdown("####  Hora de la primera gestión")
 
         df_hora = (
             df_f.groupby("Gestor")["HoraGestion"]
@@ -206,7 +220,7 @@ with tab1:
 
     # ----------- 2) Slider + funnel -----------
     with colB:
-        st.markdown("#### ⏳ Rango de hora")
+        st.markdown("####  Rango de hora")
 
         h_min = int(df_f["Hora"].min())
         h_max = int(df_f["Hora"].max())
@@ -245,7 +259,7 @@ with tab1:
 
     # ----------- 3) Donut Tipo Contacto -----------
     with colC:
-        st.markdown("#### 📞 Tipo de contacto")
+        st.markdown("#### Tipo de contacto")
 
         tc = df_f["TipoContacto"].value_counts().reset_index()
         tc.columns = ["Tipo", "Cantidad"]
@@ -260,7 +274,7 @@ with tab1:
 
     # ----------- Tabla resumen gestor -----------
     with b1:
-        st.markdown("#### 📋 Resumen por Gestor")
+        st.markdown("####  Resumen por Gestor")
 
         tabla = (
             df_f.groupby("Gestor")
@@ -280,7 +294,7 @@ with tab1:
 
     # ----------- Tabla por hora -----------
     with b2:
-        st.markdown("#### 📊 Gestiones por Hora")
+        st.markdown("#### Gestiones por Hora")
 
         tabla_horas = pd.pivot_table(
             df_f,
