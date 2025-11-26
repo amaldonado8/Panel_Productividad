@@ -35,7 +35,21 @@ def load_csv(path):
 @st.cache_data
 def load_all():
 
-    df = load_csv("Data/Gestion_part1.csv")
+    # CARGAR LOS 5 ARCHIVOS DE GESTIONES
+    gestion_files = [
+        "Data/Gestion_part1.csv",
+        "Data/Gestion_part2.csv",
+        "Data/Gestion_part3.csv",
+        "Data/Gestion_part4.csv",
+        "Data/Gestion_part5.csv"
+    ]
+
+    df_list = [load_csv(f) for f in gestion_files]
+
+    # UNIR TODO EN UN SOLO DATAFRAME
+    df = pd.concat(df_list, ignore_index=True)
+
+    # Cargar otras tablas
     tipo_contacto = load_csv("Data/TipoContacto.csv")
     producto = load_csv("Data/Producto.csv")
     orden_etapa = load_csv("Data/Orden etapa.csv")
