@@ -1,30 +1,29 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 import csv
 
-st.set_page_config(page_title="Panel Productividad BS", layout="wide")
+st.set_page_config(page_title="Diagnóstico de Datos", layout="wide")
 
 # =========================================================
 # Función robusta para cargar CSV y limpiar columnas
 # =========================================================
 def load_csv(path):
     try:
-        # Detectar separador automáticamente
+        # Detectar separador
         with open(path, "r", encoding="latin-1") as f:
             dialect = csv.Sniffer().sniff(f.read(1024))
             sep = dialect.delimiter
     except:
         sep = ";"
 
-    df = pd.read_csv(path, sep=sep, encoding="latin-1")
+    df = pd.read_csv(path, sep=sep, encoding="latin-1", dtype=str)
 
-    # Normalizar columnas (quita espacios, BOM, mayúsc/minúsc)
+    # Normalizar columnas
     df.columns = (
         df.columns
         .str.strip()
-        .str.replace("\ufeff", "", regex=False)
         .str.replace(" ", "")
+        .str.replace("\ufeff", "", regex=False)
         .str.replace("﻿", "", regex=False)
     )
 
@@ -32,69 +31,36 @@ def load_csv(path):
 
 
 # =========================================================
-# CARGA TODO
+# Cargar archivos
 # =========================================================
-@st.cache_data
-def load_all():
+st.title("🔍 Diagnóstico de Columnas en CSVs")
 
-    df = load_csv("Data/Gestion_part1.csv")
-    tipo_contacto = load_csv("Data/TipoContacto.csv")
-    producto = load_csv("Data/Producto.csv")
-    orden_etapa = load_csv("Data/Orden etapa.csv")
-    semana = load_csv("Data/Semana.csv")
-
-    # Confirmar columnas limpias
-    # st.write(df.columns)
-    # st.write(tipo_contacto.columns)
-
-    # -----------------------------------------
-    #   MERGES
-    # -----------------------------------------
-
-    # TipoContacto.csv tiene columnas: CodigoTipoContacto, TipoContacto
-    df = df.merge(
-        tipo_contacto,
-        left_on="CodigoTipoContacto",
-        right_on="CodigoTipoContacto",
-        how="left"
-    )
-
-    # Producto.csv tiene ProductoGestion y Producto
-    df = df.merge(
-        producto[["ProductoGestion", "Producto"]],
-        on="ProductoGestion",
-        how="left"
-    )
-
-    # Orden etapa
-    df = df.merge(
-        orden_etapa,
-        on="Etapa",
-        how="left"
-    )
-
-    # Semana.csv tiene columna fechaGestion, pero en Gestion_part1 es FechaGestion
-    semana = semana.rename(columns={"fechaGestion": "FechaGestion"})
-    df = df.merge(
-        semana,
-        on="FechaGestion",
-        how="left"
-    )
-
-    # -----------------------------------------
-    # Crear métricas internas
-    # -----------------------------------------
-    df["Gestiones"] = 1
-    df["Contacto"] = df["EsContacto"]
-    df["ContactoDirecto"] = df["EsContactoDirecto"]
-    df["Compromisos"] = df["EsCompromiso"]
-    df["CD"] = df["EsContactoDirecto"]
-
-    return df
+st.markdown("### 1️⃣ Leyendo Gestion_part1.csv...")
+df = load_csv("Data/Gestion_part1.csv")
+st.write("Columnas detectadas:", list(df.columns))
 
 
-df = load_all()
+st.markdown("### 2️⃣ Leyendo TipoContacto.csv...")
+tipo_contacto = load_csv("Data/TipoContacto.csv")
+st.write("Columnas detectadas:", list(tipo_contacto.columns))
 
-st.success("Datos cargados correctamente 🎉")
-st.write(df.head())
+
+st.markdown("### 3️⃣ Leyendo Producto.csv...")
+producto = load_csv("Data/Producto.csv")
+st.write("Columnas detectadas:", list(producto.columns))
+
+
+st.markdown("### 4️⃣ Leyendo Orden etapa.csv...")
+orden_etapa = load_csv("Data/Orden etapa.csv")
+st.write("Columnas detectadas:", list(orden_etapa.columns))
+
+
+st.markdown("### 5️⃣ Leyendo Semana.csv...")
+semana = load_csv("Data/Semana.csv")
+st.write("Columnas detectadas:", list(semana.columns))
+
+
+st.warning("📌 Copia las 5 listas de arriba y envíamelas aquí. Con eso genero el panel completo sin errores.")
+st.stop()
+
 
