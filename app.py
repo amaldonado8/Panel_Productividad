@@ -15,7 +15,7 @@ def load_data():
 
     # Busca cualquier archivo cuyo nombre comience con "Gestion"
     for f in os.listdir(folder):
-        if f.lower().startswith("gestion") and f.lower().endswith(".csv"):
+        if f.lower().startswith("Gestion_part2") and f.lower().endswith(".csv"):
             file_name = os.path.join(folder, f)
             break
 
