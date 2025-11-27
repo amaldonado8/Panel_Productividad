@@ -316,31 +316,31 @@ with tab1:
 # =========================================================
 with tab2:
 
-    st.title(" Detalle de Gestiones")
+    st.title("📄 Detalle de Gestiones")
 
     st.markdown("###  Filtros")
 
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    d1, d2, d3, d4, d5, d6 = st.columns(6)
 
-    with c1:
-        fecha_d = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
+    with d1:
+        fecha_d = st.selectbox("Fecha Gestión — Detalle", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
 
-    with c2:
-        supervisor_d = st.selectbox("Supervisor", ["Todas"] + sorted(df["Supervisor"].dropna().unique()))
+    with d2:
+        supervisor_d = st.selectbox("Supervisor — Detalle", ["Todas"] + sorted(df["Supervisor"].dropna().unique()))
 
-    with c3:
-        gestor_d = st.selectbox("Gestor", ["Todas"] + sorted(df["Gestor"].dropna().unique()))
+    with d3:
+        gestor_d = st.selectbox("Gestor — Detalle", ["Todas"] + sorted(df["Gestor"].dropna().unique()))
 
-    with c4:
-        etapa_d = st.selectbox("Etapa", ["Todas"] + sorted(df["Etapa"].dropna().unique()))
+    with d4:
+        etapa_d = st.selectbox("Etapa — Detalle", ["Todas"] + sorted(df["Etapa"].dropna().unique()))
 
-    with c5:
-        estrategia_d = st.selectbox("Estrategia", ["Todas"] + sorted(df["Estrategia"].dropna().unique()))
+    with d5:
+        estrategia_d = st.selectbox("Estrategia — Detalle", ["Todas"] + sorted(df["Estrategia"].dropna().unique()))
 
-    with c6:
-        producto_d = st.selectbox("Producto", ["Todos"] + sorted(df["Producto"].dropna().unique()))
+    with d6:
+        producto_d = st.selectbox("Producto — Detalle", ["Todos"] + sorted(df["Producto"].dropna().unique()))
 
-    # aplicar filtros
+    # Aplicar filtros
     df_det = df.copy()
 
     if fecha_d != "Todas":
@@ -361,9 +361,8 @@ with tab2:
     if producto_d != "Todos":
         df_det = df_det[df_det["Producto"] == producto_d]
 
-    # tabla final
     st.markdown("---")
-    st.markdown("###  Registros detallados")
+    st.markdown("### 📋 Registros detallados")
 
     columnas_detalle = [
         "Gestor",
@@ -375,13 +374,9 @@ with tab2:
         "Observacion"
     ]
 
-    # Validar columnas presentes
     columnas_presentes = [c for c in columnas_detalle if c in df_det.columns]
 
     df_final = df_det[columnas_presentes].sort_values("HoraGestion")
 
     st.dataframe(df_final, use_container_width=True, height=650)
 
-
-with tab3:
-    st.info("Pestaña Comparativo — pendiente de construir.")
