@@ -311,8 +311,77 @@ with tab1:
 # =========================================================
 # Placeholders de las otras pestañas
 # =========================================================
+# =========================================================
+# 6. PESTAÑA — DETALLE
+# =========================================================
 with tab2:
-    st.info("Pestaña Detalle — pendiente de construir.")
+
+    st.title(" Detalle de Gestiones")
+
+    st.markdown("###  Filtros")
+
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
+
+    with c1:
+        fecha_d = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
+
+    with c2:
+        supervisor_d = st.selectbox("Supervisor", ["Todas"] + sorted(df["Supervisor"].dropna().unique()))
+
+    with c3:
+        gestor_d = st.selectbox("Gestor", ["Todas"] + sorted(df["Gestor"].dropna().unique()))
+
+    with c4:
+        etapa_d = st.selectbox("Etapa", ["Todas"] + sorted(df["Etapa"].dropna().unique()))
+
+    with c5:
+        estrategia_d = st.selectbox("Estrategia", ["Todas"] + sorted(df["Estrategia"].dropna().unique()))
+
+    with c6:
+        producto_d = st.selectbox("Producto", ["Todos"] + sorted(df["Producto"].dropna().unique()))
+
+    # aplicar filtros
+    df_det = df.copy()
+
+    if fecha_d != "Todas":
+        df_det = df_det[df_det["FechaGestion"] == fecha_d]
+
+    if supervisor_d != "Todas":
+        df_det = df_det[df_det["Supervisor"] == supervisor_d]
+
+    if gestor_d != "Todas":
+        df_det = df_det[df_det["Gestor"] == gestor_d]
+
+    if etapa_d != "Todas":
+        df_det = df_det[df_det["Etapa"] == etapa_d]
+
+    if estrategia_d != "Todas":
+        df_det = df_det[df_det["Estrategia"] == estrategia_d]
+
+    if producto_d != "Todos":
+        df_det = df_det[df_det["Producto"] == producto_d]
+
+    # tabla final
+    st.markdown("---")
+    st.markdown("###  Registros detallados")
+
+    columnas_detalle = [
+        "Gestor",
+        "Identificacion",
+        "Telefono",
+        "HoraGestion",
+        "Respuesta",
+        "TipoContacto",
+        "Observacion"
+    ]
+
+    # Validar columnas presentes
+    columnas_presentes = [c for c in columnas_detalle if c in df_det.columns]
+
+    df_final = df_det[columnas_presentes].sort_values("HoraGestion")
+
+    st.dataframe(df_final, use_container_width=True, height=650)
+
 
 with tab3:
     st.info("Pestaña Comparativo — pendiente de construir.")
