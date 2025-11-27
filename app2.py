@@ -417,10 +417,10 @@ with tab2:
     st.dataframe(df_final, use_container_width=True, height=650)
 
 
-# =========================================================
-# 7. PESTAÑA — COMPARATIVO (CORREGIDO)
-# =========================================================
 
+# =========================================================
+# 7. PESTAÑA — COMPARATIVO
+# =========================================================
 with tab3:
 
     st.title(" Comparativo de Productividad")
@@ -431,52 +431,29 @@ with tab3:
     c1, c2, c3, c4, c5, c6 = st.columns(6)
 
     with c1:
-        fecha_c = st.selectbox(
-            "Fecha Gestión — Comp.",
-            ["Todas"] + sorted(df["Fecha"].dropna().unique()),
-            key="fc3"
-        )
+        fecha_c = st.selectbox("Fecha Gestión — Comp.", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
 
     with c2:
-        supervisor_c = st.selectbox(
-            "Supervisor — Comp.",
-            ["Todas"] + sorted(df["Supervisor"].dropna().unique()),
-            key="sc3"
-        )
+        supervisor_c = st.selectbox("Supervisor — Comp.", ["Todas"] + sorted(df["Supervisor"].dropna().unique()))
 
     with c3:
-        gestor_c = st.selectbox(
-            "Gestor — Comp.",
-            ["Todas"] + sorted(df["Gestor"].dropna().unique()),
-            key="gc3"
-        )
+        gestor_c = st.selectbox("Gestor — Comp.", ["Todas"] + sorted(df["Gestor"].dropna().unique()))
 
     with c4:
-        etapa_c = st.selectbox(
-            "Etapa — Comp.",
-            ["Todas"] + sorted(df["Etapa"].dropna().unique()),
-            key="ec3"
-        )
+        etapa_c = st.selectbox("Etapa — Comp.", ["Todas"] + sorted(df["Etapa"].dropna().unique()))
 
     with c5:
-        estrategia_c = st.selectbox(
-            "Estrategia — Comp.",
-            ["Todas"] + sorted(df["Estrategia"].dropna().unique()),
-            key="es3"
-        )
+        estrategia_c = st.selectbox("Estrategia — Comp.", ["Todas"] + sorted(df["Estrategia"].dropna().unique()))
 
     with c6:
-        producto_c = st.selectbox(
-            "Producto — Comp.",
-            ["Todos"] + sorted(df["Producto"].dropna().unique()),
-            key="pc3"
-        )
+        producto_c = st.selectbox("Producto — Comp.", ["Todos"] + sorted(df["Producto"].dropna().unique()))
 
-    # -------------------- APLICAR FILTROS --------------------
+
+    # Filtros aplicados
     df_c = df.copy()
 
     if fecha_c != "Todas":
-        df_c = df_c[df_c["Fecha"] == fecha_c]   # ←<<< CORREGIDO AQUÍ
+        df_c = df_c[df_c["FechaGestion"] == fecha_c]
 
     if supervisor_c != "Todas":
         df_c = df_c[df_c["Supervisor"] == supervisor_c]
@@ -494,55 +471,53 @@ with tab3:
         df_c = df_c[df_c["Producto"] == producto_c]
 
 
-    # -------------------- SLIDER HORA --------------------
+    # -------------------- SLIDER DE HORA --------------------
     st.markdown("---")
     st.subheader("Rango de Hora")
 
     h_min_c = int(df_c["Hora"].min())
     h_max_c = int(df_c["Hora"].max())
 
-    col_h1, col_h2 = st.columns(2)
+    h1, h2 = st.columns(2)
 
-    with col_h1:
-        desde_c = st.slider("Desde", h_min_c, h_max_c, h_min_c, key="hmin_c3")
+    with h1:
+        desde_c = st.slider("Desde", h_min_c, h_max_c, h_min_c, key="hmin3")
 
-    with col_h2:
-        hasta_c = st.slider("Hasta", h_min_c, h_max_c, h_max_c, key="hmax_c3")
+    with h2:
+        hasta_c = st.slider("Hasta", h_min_c, h_max_c, h_max_c, key="hmax3")
 
     df_c_rango = df_c[(df_c["Hora"] >= desde_c) & (df_c["Hora"] <= hasta_c)]
 
-    # -------------------- GRÁFICO --------------------
+
+    # -------------------- GRÁFICO COMPARATIVO --------------------
     st.markdown("---")
     st.subheader("Comparativo por Tipo de Contacto y Día")
 
-    if "MesDia" not in df_c_rango.columns:
-        st.error("❌ La columna 'MesDia' no existe. Revisa Semana.csv")
-    else:
-        comp = (
-            df_c_rango.groupby(["TipoContacto", "MesDia"])
-            .agg({"Gestiones": "sum"})
-            .reset_index()
-        )
+    comp = (
+        df_c_rango.groupby(["TipoContacto", "DiaNombre"])
+        .agg({"Gestiones": "sum"})
+        .reset_index()
+    )
 
-        if comp.empty:
-            st.warning("⚠️ No hay datos para mostrar con los filtros seleccionados.")
-        else:
-            fig_comp = px.bar(
-                comp,
-                x="TipoContacto",
-                y="Gestiones",
-                color="MesDia",
-                barmode="group",
-                text="Gestiones"
-            )
-            st.plotly_chart(fig_comp, use_container_width=True, height=420)
+    fig_comp = px.bar(
+        comp,
+        x="Gestiones",
+        y="TipoContacto",
+        color="DiaNombre",
+        barmode="group",
+        text="Gestiones"
+    )
 
-    # -------------------- TABLA --------------------
+    st.plotly_chart(fig_comp, use_container_width=True, height=420)
+
+
+    # -------------------- TABLA COMPARATIVA --------------------
     st.markdown("---")
     st.subheader("Tabla Comparativa por Gestor y Día")
 
+    # columnas calculadas por día
     tabla = (
-        df_c_rango.groupby(["Gestor", "MesDia"])
+        df_c_rango.groupby(["Gestor", "DiaNombre"])
         .agg({
             "Gestiones": "sum",
             "ContactoDirecto": "sum",
@@ -552,19 +527,19 @@ with tab3:
         .reset_index()
     )
 
-    if not tabla.empty:
-        tabla_pivot = tabla.pivot_table(
-            index="Gestor",
-            columns="MesDia",
-            values=["Gestiones", "ContactoDirecto", "Compromisos", "HoraGestion"],
-            aggfunc="first"
-        )
-        tabla_pivot.columns = [f"{col2} {col1}" for col1, col2 in tabla_pivot.columns]
-        tabla_pivot = tabla_pivot.reset_index()
+    # Pivot para crear columnas como en Power BI
+    tabla_pivot = tabla.pivot_table(
+        index="Gestor",
+        columns="DiaNombre",
+        values=["Gestiones", "ContactoDirecto", "Compromisos", "HoraGestion"],
+        aggfunc="first"
+    )
 
-        st.dataframe(tabla_pivot, use_container_width=True, height=650)
-    else:
-        st.warning("⚠️ No hay registros para la tabla comparativa.")
+    tabla_pivot.columns = [f"{col2} {col1}" for col1, col2 in tabla_pivot.columns]
+
+    tabla_pivot = tabla_pivot.reset_index()
+
+    st.dataframe(tabla_pivot, use_container_width=True, height=650)
 
 
 
