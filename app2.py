@@ -316,8 +316,9 @@ with tab1:
 # =========================================================
 with tab2:
 
-    st.title("📄 Detalle de Gestiones")
+    st.title(" Detalle de Gestiones")
 
+    # -------------------- FILTROS --------------------
     st.markdown("###  Filtros")
 
     d1, d2, d3, d4, d5, d6 = st.columns(6)
@@ -361,6 +362,41 @@ with tab2:
     if producto_d != "Todos":
         df_det = df_det[df_det["Producto"] == producto_d]
 
+    # -------------------- GRAFICOS --------------------
+    st.markdown("---")
+    g1, g2 = st.columns(2)
+
+    # ----------- Gráfico 1: Respuestas -----------
+    with g1:
+        st.markdown("#### Respuestas más frecuentes")
+        resp = df_det["Respuesta"].value_counts().reset_index()
+        resp.columns = ["Respuesta", "Cantidad"]
+
+        fig_resp = px.bar(
+            resp,
+            y="Respuesta",
+            x="Cantidad",
+            orientation="h",
+            text="Cantidad"
+        )
+        st.plotly_chart(fig_resp, use_container_width=True, height=400)
+
+    # ----------- Gráfico 2: Tipo de Contacto -----------
+    with g2:
+        st.markdown("#### Tipo de Contacto")
+        tc = df_det["TipoContacto"].value_counts().reset_index()
+        tc.columns = ["TipoContacto", "Cantidad"]
+
+        fig_tc = px.bar(
+            tc,
+            y="TipoContacto",
+            x="Cantidad",
+            orientation="h",
+            text="Cantidad"
+        )
+        st.plotly_chart(fig_tc, use_container_width=True, height=400)
+
+    # -------------------- TABLA DETALLE --------------------
     st.markdown("---")
     st.markdown("### 📋 Registros detallados")
 
@@ -379,4 +415,6 @@ with tab2:
     df_final = df_det[columnas_presentes].sort_values("HoraGestion")
 
     st.dataframe(df_final, use_container_width=True, height=650)
+
+
 
