@@ -1,21 +1,20 @@
 import streamlit as st
 import pandas as pd
 
-st.title("Verificación de acceso a OneDrive")
+st.title("Verificación de acceso a OneDrive Personal")
 
-# Enlace OneDrive con download=1
-url = "https://sicec-my.sharepoint.com/:x:/g/personal/amaldonado_sicobra_com/IQBQ5nuzo3MgSKUAkPeHhAvJARLribJNnL2KGmKGdHYlc4c?download=1"
+url = "https://onedrive.live.com/download?resid=3EBA015078183D6B!140&authkey=!CJl6TtkeBYTKNX"
 
-st.write("Probando acceso al archivo...")
+st.write("Intentando leer el archivo de OneDrive Personal (120 MB)...")
 
 try:
     df = pd.read_csv(url)
-    st.success("✅ Archivo leído correctamente")
+    st.success("✅ Archivo leído correctamente desde OneDrive Personal")
     st.write("Primeras filas del archivo:")
     st.dataframe(df.head())
+
 except Exception as e:
     st.error("❌ No se pudo leer el archivo")
     st.write("Detalle del error:")
-    st.code(e)
-
+    st.code(str(e))
 
