@@ -324,7 +324,7 @@ with tab2:
     d1, d2, d3, d4, d5, d6 = st.columns(6)
 
     with d1:
-        fecha_d = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
+        fecha_d = st.selectbox("Fecha Gestión — Detalle", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
 
     with d2:
         supervisor_d = st.selectbox("Supervisor — Detalle", ["Todas"] + sorted(df["Supervisor"].dropna().unique()))
