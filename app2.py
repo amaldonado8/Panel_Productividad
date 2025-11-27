@@ -472,12 +472,11 @@ with tab3:
             key="pc3"
         )
 
-
     # -------------------- APLICAR FILTROS --------------------
     df_c = df.copy()
 
     if fecha_c != "Todas":
-        df_c = df_c[df_c["Fecha"] == fecha_c]
+        df_c = df_c[df_c["Fecha"] == fecha_c]   # ←<<< CORREGIDO AQUÍ
 
     if supervisor_c != "Todas":
         df_c = df_c[df_c["Supervisor"] == supervisor_c]
@@ -512,12 +511,10 @@ with tab3:
 
     df_c_rango = df_c[(df_c["Hora"] >= desde_c) & (df_c["Hora"] <= hasta_c)]
 
-
-    # -------------------- GRÁFICO COMPARATIVO --------------------
+    # -------------------- GRÁFICO --------------------
     st.markdown("---")
     st.subheader("Comparativo por Tipo de Contacto y Día")
 
-    # Verificar columnas de Semana.csv
     if "MesDia" not in df_c_rango.columns:
         st.error("❌ La columna 'MesDia' no existe. Revisa Semana.csv")
     else:
@@ -538,11 +535,9 @@ with tab3:
                 barmode="group",
                 text="Gestiones"
             )
-
             st.plotly_chart(fig_comp, use_container_width=True, height=420)
 
-
-    # -------------------- TABLA COMPARATIVA --------------------
+    # -------------------- TABLA --------------------
     st.markdown("---")
     st.subheader("Tabla Comparativa por Gestor y Día")
 
@@ -558,21 +553,19 @@ with tab3:
     )
 
     if not tabla.empty:
-
         tabla_pivot = tabla.pivot_table(
             index="Gestor",
             columns="MesDia",
             values=["Gestiones", "ContactoDirecto", "Compromisos", "HoraGestion"],
             aggfunc="first"
         )
-
         tabla_pivot.columns = [f"{col2} {col1}" for col1, col2 in tabla_pivot.columns]
-
         tabla_pivot = tabla_pivot.reset_index()
 
         st.dataframe(tabla_pivot, use_container_width=True, height=650)
     else:
-        st.warning("⚠️ No hay registros para la tabla comparativa con los filtros actuales.")
+        st.warning("⚠️ No hay registros para la tabla comparativa.")
+
 
 
 
