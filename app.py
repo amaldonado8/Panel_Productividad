@@ -285,6 +285,7 @@ with tab1:
         st.dataframe(tabla_horas, use_container_width=True, height=320)
 
 
+
 # =========================================================
 # 6. PESTAÑA — DETALLE
 # =========================================================
@@ -370,11 +371,44 @@ with tab2:
     if tipo_d != "Todos":
         df_det = df_det[df_det["Robot"] == tipo_d]
 
-    # -------------------- GRAFICOS --------------------
+    # -------------------- SLIDER DE HORA --------------------
+    st.markdown("---")
+    st.markdown("###  Rango de hora")
+
+    try:
+        h_min = int(df_det["Hora"].min())
+        h_max = int(df_det["Hora"].max())
+    except:
+        h_min, h_max = 0, 23
+
+    hh1, hh2, hh3 = st.columns([1, 1, 4])
+
+    with hh1:
+        desde_h = st.number_input("Desde", min_value=h_min, max_value=h_max, value=h_min, key="desde_h_d")
+
+    with hh2:
+        hasta_h = st.number_input("Hasta", min_value=h_min, max_value=h_max, value=h_max, key="hasta_h_d")
+
+    with hh3:
+        rango_h = st.slider(
+            "Seleccione el rango horario",
+            min_value=h_min,
+            max_value=h_max,
+            value=(desde_h, hasta_h),
+            key="slider_h_d"
+        )
+
+    # Filtrar por hora
+    df_det = df_det[(df_det["Hora"] >= rango_h[0]) & (df_det["Hora"] <= rango_h[1])]
+
+    # KPI
+    st.markdown(f"### Gestiones filtradas: **{df_det['Gestiones'].sum():,.0f}**")
+
+    # -------------------- GRÁFICOS --------------------
     st.markdown("---")
     g1, g2 = st.columns(2)
 
-    # -------- Gráfico 1: Respuestas --------
+    # -------- Gráfico 1: Respuestas más frecuentes --------
     with g1:
         st.markdown("#### Respuestas más frecuentes")
 
@@ -393,19 +427,23 @@ with tab2:
         else:
             st.info("No existe la columna 'Respuesta' en los datos.")
 
-    # -------- Gráfico 2: Tipo de Contacto --------
+    # -------- Gráfico 2: Gestiones por Tipo de Contacto --------
     with g2:
-        st.markdown("#### Tipo de Contacto")
+        st.markdown("#### Gestiones por Tipo de Contacto")
 
-        tc = df_det["TipoContacto"].value_counts().reset_index()
-        tc.columns = ["TipoContacto", "Cantidad"]
+        tc = (
+            df_det.groupby("TipoContacto")["Gestiones"]
+            .sum()
+            .reset_index()
+        )
+        tc.columns = ["TipoContacto", "Gestiones"]
 
         fig_tc = px.bar(
             tc,
             y="TipoContacto",
-            x="Cantidad",
+            x="Gestiones",
             orientation="h",
-            text="Cantidad"
+            text="Gestiones"
         )
         st.plotly_chart(fig_tc, use_container_width=True, height=400)
 
@@ -421,7 +459,6 @@ with tab2:
         "Respuesta",
         "TipoContacto",
         "CodigoTipoContacto",
-        "Robot"
     ]
 
     columnas_presentes = [c for c in columnas_detalle if c in df_det.columns]
