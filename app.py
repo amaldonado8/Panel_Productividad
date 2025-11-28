@@ -37,7 +37,7 @@ def load_all():
     df = load_csv("Data1/gestiones_actualizado1.csv")
 
     # Cargar tablas auxiliares
-    tipo_contacto = load_csv("Data1/TipoContacto.csv")
+    tipo_contacto = load_csv("Data/TipoContacto.csv")
     producto = load_csv("Data/Producto.csv")
     orden_etapa = load_csv("Data/OrdenEtapa.csv")
     semana = load_csv("Data/Semana.csv")
