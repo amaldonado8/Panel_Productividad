@@ -215,7 +215,7 @@ with tab1:
         st.markdown(f"**Gestiones en rango:** {df_rango['Gestiones'].sum():,.0f}")
 
         funnel = pd.DataFrame({
-            "Etapa": ["Operaciones", "Contacto", "Directo", "Compromisos"],
+            "Etapa": ["Operaciones", "Contacto Directo", "Directo", "Compromisos"],
             "Valor": [
                 df_rango["NumeroOperacion"].nunique(),
                 df_rango["Contacto"].sum(),
