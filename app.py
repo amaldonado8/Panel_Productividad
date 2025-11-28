@@ -75,12 +75,22 @@ def load_all():
 
     df = df.merge(semana, on="FechaGestion", how="left")
 
-    # Métricas
+
+    # ========= CAMPOS CALCULADOS =========
+    
+    # EsContactoDirecto (como DAX)
+    df["EsContactoDirecto"] = (df["CodigoTipoContacto"] == "TIPRESCDIRE").astype(int)
+    
+    # EsContacto (como DAX)
+    df["EsContacto"] = (df["CodigoTipoContacto"] != "TIPRESNCON").astype(int)
+    
+    # Métricas del panel
     df["Gestiones"] = 1
     df["CD"] = df["EsContactoDirecto"]
     df["Contacto"] = df["EsContacto"]
     df["ContactoDirecto"] = df["EsContactoDirecto"]
     df["Compromisos"] = df["EsCompromiso"]
+
 
     return df
 
