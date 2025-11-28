@@ -293,31 +293,36 @@ with tab2:
 
     st.title(" Detalle de Gestiones")
 
+
     # -------------------- FILTROS --------------------
     st.markdown("###  Filtros")
 
+        d1, d2, d3, d4, d5, d6, d7 = st.columns(7)
+    
+    with d1:
+        fecha_d = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()), key="fecha_d")
+    
+    with d2:
+        supervisor_d = st.selectbox("Supervisor", ["Todas"] + sorted(df["Supervisor"].dropna().unique()), key="supervisor_d")
+    
+    with d3:
+        gestor_d = st.selectbox("Gestor", ["Todas"] + sorted(df["Gestor"].dropna().unique()), key="gestor_d")
+    
+    with d4:
+        etapa_d = st.selectbox("Etapa", ["Todas"] + sorted(df["Etapa"].dropna().unique()), key="etapa_d")
+    
+    with d5:
+        estrategia_d = st.selectbox("Estrategia", ["Todas"] + sorted(df["Estrategia"].dropna().unique()), key="estrategia_d")
+    
+    with d6:
+        producto_d = st.selectbox("Producto", ["Todos"] + sorted(df["Producto"].dropna().unique()), key="producto_d")
+    
+    with d7:
+        tipo_d = st.selectbox("Tipo", ["Todos"] + sorted(df["Robot"].unique()), key="tipo_d")
+
+
     d1, d2, d3, d4, d5, d6, d7 = st.columns(7)
 
-    with d1:
-        fecha_d = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
-
-    with d2:
-        supervisor_d = st.selectbox("Supervisor", ["Todas"] + sorted(df["Supervisor"].dropna().unique()))
-
-    with d3:
-        gestor_d = st.selectbox("Gestor", ["Todas"] + sorted(df["Gestor"].dropna().unique()))
-
-    with d4:
-        etapa_d = st.selectbox("Etapa", ["Todas"] + sorted(df["Etapa"].dropna().unique()))
-
-    with d5:
-        estrategia_d = st.selectbox("Estrategia", ["Todas"] + sorted(df["Estrategia"].dropna().unique()))
-
-    with d6:
-        producto_d = st.selectbox("Producto", ["Todos"] + sorted(df["Producto"].dropna().unique()))
-
-    with d7:
-        tipo_d = st.selectbox("Tipo", ["Todos"] + sorted(df["Robot"].dropna().unique()))
 
     # Aplicar filtros
     df_det = df.copy()
