@@ -283,3 +283,124 @@ with tab1:
         )
 
         st.dataframe(tabla_horas, use_container_width=True, height=320)
+
+
+
+# =========================================================
+# 6. PESTAÑA — DETALLE
+# =========================================================
+with tab2:
+
+    st.title(" Detalle de Gestiones")
+
+    # -------------------- FILTROS --------------------
+    st.markdown("###  Filtros")
+
+    d1, d2, d3, d4, d5, d6, d7 = st.columns(7)
+
+    with d1:
+        fecha_d = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
+
+    with d2:
+        supervisor_d = st.selectbox("Supervisor", ["Todas"] + sorted(df["Supervisor"].dropna().unique()))
+
+    with d3:
+        gestor_d = st.selectbox("Gestor", ["Todas"] + sorted(df["Gestor"].dropna().unique()))
+
+    with d4:
+        etapa_d = st.selectbox("Etapa", ["Todas"] + sorted(df["Etapa"].dropna().unique()))
+
+    with d5:
+        estrategia_d = st.selectbox("Estrategia", ["Todas"] + sorted(df["Estrategia"].dropna().unique()))
+
+    with d6:
+        producto_d = st.selectbox("Producto", ["Todos"] + sorted(df["Producto"].dropna().unique()))
+
+    with d7:
+        tipo_d = st.selectbox("Tipo", ["Todos"] + sorted(df["Robot"].dropna().unique()))
+
+    # Aplicar filtros
+    df_det = df.copy()
+
+    if fecha_d != "Todas":
+        df_det = df_det[df_det["FechaGestion"] == fecha_d]
+
+    if supervisor_d != "Todas":
+        df_det = df_det[df_det["Supervisor"] == supervisor_d]
+
+    if gestor_d != "Todas":
+        df_det = df_det[df_det["Gestor"] == gestor_d]
+
+    if etapa_d != "Todas":
+        df_det = df_det[df_det["Etapa"] == etapa_d]
+
+    if estrategia_d != "Todas":
+        df_det = df_det[df_det["Estrategia"] == estrategia_d]
+
+    if producto_d != "Todos":
+        df_det = df_det[df_det["Producto"] == producto_d]
+
+    if tipo_d != "Todos":
+        df_det = df_det[df_det["Robot"] == tipo_d]
+
+    # -------------------- GRAFICOS --------------------
+    st.markdown("---")
+    g1, g2 = st.columns(2)
+
+    # ----------- Gráfico 1: Respuestas ----------- 
+    with g1:
+        st.markdown("#### Respuestas más frecuentes")
+
+        if "Respuesta" in df_det.columns:
+            resp = df_det["Respuesta"].value_counts().reset_index()
+            resp.columns = ["Respuesta", "Cantidad"]
+
+            fig_resp = px.bar(
+                resp,
+                y="Respuesta",
+                x="Cantidad",
+                orientation="h",
+                text="Cantidad"
+            )
+            st.plotly_chart(fig_resp, use_container_width=True, height=400)
+        else:
+            st.info("No existe la columna 'Respuesta' en los datos.")
+
+    # ----------- Gráfico 2: Tipo de Contacto ----------- 
+    with g2:
+        st.markdown("#### Tipo de Contacto")
+
+        tc = df_det["TipoContacto"].value_counts().reset_index()
+        tc.columns = ["TipoContacto", "Cantidad"]
+
+        fig_tc = px.bar(
+            tc,
+            y="TipoContacto",
+            x="Cantidad",
+            orientation="h",
+            text="Cantidad"
+        )
+        st.plotly_chart(fig_tc, use_container_width=True, height=400)
+
+    # -------------------- TABLA DETALLE --------------------
+    st.markdown("---")
+    st.markdown("###  Registros detallados")
+
+    columnas_detalle = [
+        "Gestor",
+        "Identificacion",
+        "Telefono",
+        "HoraGestion",
+        "Respuesta",
+        "TipoContacto",
+        "CodigoTipoContacto",
+        "Robot"
+    ]
+
+    # Filtrar columnas existentes
+    columnas_presentes = [c for c in columnas_detalle if c in df_det.columns]
+
+    df_final = df_det[columnas_presentes].sort_values("HoraGestion")
+
+    st.dataframe(df_final, use_container_width=True, height=650)
+
