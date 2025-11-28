@@ -83,6 +83,10 @@ def load_all():
     
     # EsContacto (como DAX)
     df["EsContacto"] = (df["CodigoTipoContacto"] != "TIPRESNCON").astype(int)
+
+    # Robot (como DAX)
+    df["Robot"] = df["EsGestor"].apply(lambda x: "GESTOR" if x == 1 else "GESTOR_")
+
     
     # Métricas del panel
     df["Gestiones"] = 1
@@ -113,7 +117,8 @@ with tab1:
     # -------------------- FILTROS --------------------
     st.markdown("###  Filtros")
 
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
+
 
     with c1:
         fecha_sel = st.selectbox("Fecha Gestión", ["Todas"] + sorted(df["FechaGestion"].dropna().unique()))
@@ -132,6 +137,9 @@ with tab1:
 
     with c6:
         producto_sel = st.selectbox("Producto", ["Todos"] + sorted(df["Producto"].dropna().unique()))
+    with c7:
+        tipo_sel = st.selectbox("Tipo", ["Todos"] + sorted(df["Robot"].unique()))
+
 
     # Aplicar filtros
     df_f = df.copy()
@@ -153,6 +161,10 @@ with tab1:
 
     if producto_sel != "Todos":
         df_f = df_f[df_f["Producto"] == producto_sel]
+        
+    if tipo_sel != "Todos":
+        df_f = df_f[df_f["Robot"] == tipo_sel]
+
 
 
     # -------------------- KPIs --------------------
