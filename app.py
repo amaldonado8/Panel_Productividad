@@ -38,9 +38,9 @@ def load_all():
 
     # Cargar tablas auxiliares
     tipo_contacto = load_csv("Data1/TipoContacto.csv")
-    producto = load_csv("Data1/Producto.csv")
-    orden_etapa = load_csv("Data1/OrdenEtapa.csv")
-    semana = load_csv("Data1/Semana.csv")
+    producto = load_csv("Data/Producto.csv")
+    orden_etapa = load_csv("Data/OrdenEtapa.csv")
+    semana = load_csv("Data/Semana.csv")
 
     # Corrige columnas con BOM si existen
     rename_map = {
