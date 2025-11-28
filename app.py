@@ -33,14 +33,17 @@ def load_csv(path):
 @st.cache_data
 def load_all():
 
-    # Si ahora solo usarás UN archivo unido, deja solo este:
+
+
+    # Archivo grande unificado
     df = load_csv("Data1/gestiones_actualizado1.csv")
 
-    # Cargar tablas auxiliares
+    # Cargar tablas auxiliares desde Data
     tipo_contacto = load_csv("Data/TipoContacto.csv")
     producto = load_csv("Data/Producto.csv")
-    orden_etapa = load_csv("Data/Orden etapa.csv")
+    orden_etapa = load_csv("Data/Orden etapa.csv")  
     semana = load_csv("Data/Semana.csv")
+
 
     # Corrige columnas con BOM si existen
     rename_map = {
