@@ -175,7 +175,7 @@ with tab1:
 
     k1.metric("Gestiones", df_f["Gestiones"].sum())
     k2.metric("Operaciones Únicas", df_f["NumeroOperacion"].nunique())
-    k3.metric("Contacto", df_f["Contacto"].sum())
+    k3.metric("Contacto Directo", df_f["Contacto"].sum())
     k4.metric("Directo", df_f["ContactoDirecto"].sum())
     k5.metric("Compromisos", df_f["Compromisos"].sum())
 
