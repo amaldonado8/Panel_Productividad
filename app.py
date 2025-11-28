@@ -39,7 +39,7 @@ def load_all():
     # Cargar tablas auxiliares
     tipo_contacto = load_csv("Data/TipoContacto.csv")
     producto = load_csv("Data/Producto.csv")
-    orden_etapa = load_csv("Data/OrdenEtapa.csv")
+    orden_etapa = load_csv("Data/Orden etapa.csv")
     semana = load_csv("Data/Semana.csv")
 
     # Corrige columnas con BOM si existen
