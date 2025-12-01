@@ -467,6 +467,7 @@ with tab2:
 
     st.dataframe(df_final, use_container_width=True, height=650)
 
+
 # =========================================================
 # 7. PESTAÑA — COMPARATIVO
 # =========================================================
@@ -588,7 +589,6 @@ with tab3:
     st.markdown("---")
     st.markdown("###  Comparativo por Día y Tipo de Contacto")
 
-    # Crear campo Mes Día (igual a Power BI)
     df_cmp["MesDia"] = df_cmp["FechaGestion"].astype(str).str[5:]
 
     graf = (
@@ -612,7 +612,24 @@ with tab3:
     st.markdown("---")
     st.markdown("###  Tabla Comparativa por Día y Gestor")
 
-    # Cálculos por día
+    # 🔵 Corrección del error de locale
+    dias_es = {
+        "Monday": "LUNES",
+        "Tuesday": "MARTES",
+        "Wednesday": "MIÉRCOLES",
+        "Thursday": "JUEVES",
+        "Friday": "VIERNES",
+        "Saturday": "SÁBADO",
+        "Sunday": "DOMINGO"
+    }
+
+    df_cmp["DiaNombre"] = (
+        df_cmp["FechaGestion"].dt.day_name().map(dias_es)
+        + " "
+        + df_cmp["FechaGestion"].dt.day.astype(str)
+    )
+
+    # Tabla agregada
     tabla = df_cmp.groupby(["Gestor", "DiaNombre"]).agg(
         Gestiones=("Gestiones", "sum"),
         ContactosDirectos=("ContactoDirecto", "sum"),
@@ -620,6 +637,7 @@ with tab3:
         PrimeraHora=("HoraGestion", "min")
     ).reset_index()
 
+    # Pivot
     tabla_pivot = tabla.pivot_table(
         index="Gestor",
         columns="DiaNombre",
@@ -628,6 +646,5 @@ with tab3:
     )
 
     st.dataframe(tabla_pivot, use_container_width=True, height=650)
-
 
 
