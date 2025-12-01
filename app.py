@@ -467,7 +467,6 @@ with tab2:
 
     st.dataframe(df_final, use_container_width=True, height=650)
 
-
 # =========================================================
 # 7. PESTAÑA — COMPARATIVO
 # =========================================================
@@ -629,47 +628,6 @@ with tab3:
     )
 
     st.dataframe(tabla_pivot, use_container_width=True, height=650)
-
-
-
-# -------------------- TABLA COMPARATIVA --------------------
-
-# Crear DíaNombre igual que en Power BI
-df_cmp["FechaGestion"] = pd.to_datetime(df_cmp["FechaGestion"], errors="coerce")
-
-df_cmp["DiaNombre"] = df_cmp["FechaGestion"].dt.day_name(locale="es_ES").str.upper() + " " + \
-                      df_cmp["FechaGestion"].dt.day.astype(str)
-
-
-st.markdown("---")
-st.markdown("###  Tabla Comparativa por Día y Gestor")
-
-# Crear DíaNombre si no existe
-df_cmp["FechaGestion"] = pd.to_datetime(df_cmp["FechaGestion"], errors="coerce")
-
-df_cmp["DiaNombre"] = (
-    df_cmp["FechaGestion"].dt.day_name(locale="es_ES").str.upper() + " " +
-    df_cmp["FechaGestion"].dt.day.astype(str)
-)
-
-# Agrupar igual que Power BI
-tabla = df_cmp.groupby(["Gestor", "DiaNombre"]).agg(
-    Gestiones=("Gestiones", "sum"),
-    ContactosDirectos=("ContactoDirecto", "sum"),
-    Compromisos=("Compromisos", "sum"),
-    PrimeraHora=("HoraGestion", "min")
-).reset_index()
-
-# Pivot dinámico para columnas por día
-tabla_pivot = tabla.pivot_table(
-    index="Gestor",
-    columns="DiaNombre",
-    values=["Gestiones", "ContactosDirectos", "Compromisos", "PrimeraHora"],
-    aggfunc="first"
-).sort_index(axis=1)
-
-st.dataframe(tabla_pivot, use_container_width=True, height=650)
-
 
 
 
