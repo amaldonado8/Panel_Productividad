@@ -77,17 +77,17 @@ def load_all():
 
 
     # ========= CAMPOS CALCULADOS =========
-    
+
     # EsContactoDirecto (como DAX)
     df["EsContactoDirecto"] = (df["CodigoTipoContacto"] == "TIPRESCDIRE").astype(int)
-    
+
     # EsContacto (como DAX)
     df["EsContacto"] = (df["CodigoTipoContacto"] != "TIPRESNCON").astype(int)
 
     # Robot (como DAX)
     df["Robot"] = df["EsGestor"].apply(lambda x: "GESTOR" if x == 1 else "GESTOR_")
 
-    
+
     # Métricas del panel
     df["Gestiones"] = 1
     df["CD"] = df["EsContactoDirecto"]
@@ -161,7 +161,7 @@ with tab1:
 
     if producto_sel != "Todos":
         df_f = df_f[df_f["Producto"] == producto_sel]
-        
+
     if tipo_sel != "Todos":
         df_f = df_f[df_f["Robot"] == tipo_sel]
 
@@ -466,11 +466,3 @@ with tab2:
     df_final = df_det[columnas_presentes].sort_values("HoraGestion")
 
     st.dataframe(df_final, use_container_width=True, height=650)
-
-
-# =========================================================
-# 7. PESTAÑA — COMPARATIVO
-# =========================================================
-
-
-
