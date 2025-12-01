@@ -467,3 +467,168 @@ with tab2:
 
     st.dataframe(df_final, use_container_width=True, height=650)
 
+
+
+# =========================================================
+# 7. PESTAÑA — COMPARATIVO
+# =========================================================
+with tab3:
+
+    st.title(" Comparativo de Gestiones")
+
+    # -------------------- FILTROS --------------------
+    st.markdown("###  Filtros")
+
+    c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
+
+    with c1:
+        fecha_c = st.selectbox(
+            "Fecha Gestión",
+            ["Todas"] + sorted(df["FechaGestion"].dropna().unique()),
+            key="fecha_c"
+        )
+
+    with c2:
+        supervisor_c = st.selectbox(
+            "Supervisor",
+            ["Todas"] + sorted(df["Supervisor"].dropna().unique()),
+            key="supervisor_c"
+        )
+
+    with c3:
+        gestor_c = st.selectbox(
+            "Gestor",
+            ["Todas"] + sorted(df["Gestor"].dropna().unique()),
+            key="gestor_c"
+        )
+
+    with c4:
+        etapa_c = st.selectbox(
+            "Etapa",
+            ["Todas"] + sorted(df["Etapa"].dropna().unique()),
+            key="etapa_c"
+        )
+
+    with c5:
+        estrategia_c = st.selectbox(
+            "Estrategia",
+            ["Todas"] + sorted(df["Estrategia"].dropna().unique()),
+            key="estrategia_c"
+        )
+
+    with c6:
+        producto_c = st.selectbox(
+            "Producto",
+            ["Todos"] + sorted(df["Producto"].dropna().unique()),
+            key="producto_c"
+        )
+
+    with c7:
+        tipo_c = st.selectbox(
+            "Tipo",
+            ["Todos"] + sorted(df["Robot"].dropna().unique()),
+            key="tipo_c"
+        )
+
+    # -------------------- APLICAR FILTROS --------------------
+    df_cmp = df.copy()
+
+    if fecha_c != "Todas":
+        df_cmp = df_cmp[df_cmp["FechaGestion"] == fecha_c]
+
+    if supervisor_c != "Todas":
+        df_cmp = df_cmp[df_cmp["Supervisor"] == supervisor_c]
+
+    if gestor_c != "Todas":
+        df_cmp = df_cmp[df_cmp["Gestor"] == gestor_c]
+
+    if etapa_c != "Todas":
+        df_cmp = df_cmp[df_cmp["Etapa"] == etapa_c]
+
+    if estrategia_c != "Todas":
+        df_cmp = df_cmp[df_cmp["Estrategia"] == estrategia_c]
+
+    if producto_c != "Todos":
+        df_cmp = df_cmp[df_cmp["Producto"] == producto_c]
+
+    if tipo_c != "Todos":
+        df_cmp = df_cmp[df_cmp["Robot"] == tipo_c]
+
+    # -------------------- SLIDER DE HORA --------------------
+    st.markdown("---")
+    st.markdown("###  Rango de hora")
+
+    try:
+        h_min = int(df_cmp["Hora"].min())
+        h_max = int(df_cmp["Hora"].max())
+    except:
+        h_min, h_max = 0, 23
+
+    cc1, cc2, cc3 = st.columns([1, 1, 4])
+
+    with cc1:
+        desde_c = st.number_input("Desde", min_value=h_min, max_value=h_max, value=h_min, key="desde_cmp")
+
+    with cc2:
+        hasta_c = st.number_input("Hasta", min_value=h_min, max_value=h_max, value=h_max, key="hasta_cmp")
+
+    with cc3:
+        rango_cmp = st.slider(
+            "Seleccione el rango horario",
+            min_value=h_min,
+            max_value=h_max,
+            value=(desde_c, hasta_c),
+            key="slider_cmp"
+        )
+
+    df_cmp = df_cmp[(df_cmp["Hora"] >= rango_cmp[0]) & (df_cmp["Hora"] <= rango_cmp[1])]
+
+    # KPI de gestiones
+    st.markdown(f"### Gestiones filtradas: **{df_cmp['Gestiones'].sum():,.0f}**")
+
+    # -------------------- GRÁFICO COMPARATIVO --------------------
+    st.markdown("---")
+    st.markdown("###  Comparativo por Día y Tipo de Contacto")
+
+    # Crear campo Mes Día (igual a Power BI)
+    df_cmp["MesDia"] = df_cmp["FechaGestion"].astype(str).str[5:]
+
+    graf = (
+        df_cmp.groupby(["TipoContacto", "MesDia"])["NumeroOperacion"]
+        .nunique()
+        .reset_index()
+    )
+
+    fig_cmp = px.bar(
+        graf,
+        x="TipoContacto",
+        y="NumeroOperacion",
+        color="MesDia",
+        barmode="group",
+        text="NumeroOperacion"
+    )
+
+    st.plotly_chart(fig_cmp, use_container_width=True, height=450)
+
+    # -------------------- TABLA COMPARATIVA --------------------
+    st.markdown("---")
+    st.markdown("###  Tabla Comparativa por Día y Gestor")
+
+    # Cálculos por día
+    tabla = df_cmp.groupby(["Gestor", "DiaNombre"]).agg(
+        Gestiones=("Gestiones", "sum"),
+        ContactosDirectos=("ContactoDirecto", "sum"),
+        Compromisos=("Compromisos", "sum"),
+        PrimeraHora=("HoraGestion", "min")
+    ).reset_index()
+
+    tabla_pivot = tabla.pivot_table(
+        index="Gestor",
+        columns="DiaNombre",
+        values=["Gestiones", "ContactosDirectos", "Compromisos", "PrimeraHora"],
+        aggfunc="first"
+    )
+
+    st.dataframe(tabla_pivot, use_container_width=True, height=650)
+
+
